@@ -56,7 +56,7 @@ server.registerTool(
   'get_note',
   {
     title: 'Отримати нотатку',
-    description: 'Повертає нотатку за id (наприклад "concept-freshness-status") або точною назвою: frontmatter, текст, вихідні посилання та зворотні посилання (backlinks).',
+    description: 'Повертає нотатку за id (наприклад "concept-freshness-status") або точною назвою: frontmatter, текст, вихідні посилання, backlinks і типізовані відношення онтології (relations.outgoing — depends_on, implements, applies_to, supersedes, affects; relations.incoming — used_by, implemented_by, governed_by, superseded_by, changed_by).',
     inputSchema: {
       id: z.string().optional().describe('id з frontmatter'),
       title: z.string().optional().describe('Назва нотатки (назва файлу без .md)'),
@@ -91,7 +91,7 @@ server.registerTool(
       fields: z
         .record(z.string(), z.unknown())
         .optional()
-        .describe('Поля типу: component — layer, path, implements, depends_on; decision — date, deciders, supersedes; change — kind (feature|fix|docs|refactor|test|chore), date, commit, pr, affects; concept — requirements; glossary — term_en'),
+        .describe('Поля типу. Типізовані відношення (назви нотаток або [[посилання]]): component — implements (→ concept), depends_on (→ component); decision — applies_to (→ component|concept, обов\'язково), supersedes (→ decision); change — affects (→ component|concept|decision). Інші: component — layer, path, requirements (FR-xx); decision — date, deciders; change — kind (feature|fix|docs|refactor|test|chore), date, commit, pr; concept — requirements; glossary — term_en'),
       source: z.string().optional().describe('Першоджерело репозиторій@коміт:шлях; типово — поточний коміт репозиторію застосунку'),
       dry_run: z.boolean().optional().describe('Лише показати, що буде зроблено, без запису й коміту'),
     },

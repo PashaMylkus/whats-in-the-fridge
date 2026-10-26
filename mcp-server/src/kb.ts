@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { Config } from './config.js';
 import { commitFiles, git, headShort, pullFastForward, push } from './git.js';
 import {
-  COMMON_FIELDS, ENUMS, FORBIDDEN_TITLE_CHARS, LINK_FIELDS, NoteType, ROOT_MOC, RULES, TRAILING_FIELDS, slugify,
+  COMMON_FIELDS, ENUMS, FORBIDDEN_TITLE_CHARS, LINK_FIELDS, NoteType, RELATIONS, ROOT_MOC, RULES, TRAILING_FIELDS, slugify,
 } from './schema.js';
 import { Frontmatter, Note, VaultIndex, extractLinks, loadNotes, parseNote, serializeNote } from './vault.js';
 
@@ -61,11 +61,26 @@ export class KnowledgeBase {
     const note = (ref.id && idx.byId.get(ref.id)) || (ref.title && idx.resolve(ref.title)) || undefined;
     if (!note) throw new KbError(`Нотатку не знайдено: ${ref.id ?? ref.title}`);
     const links = extractLinks(note.body, note.fm);
+    // типізовані відношення: вихідні з frontmatter і обернені, обчислені з інших нотаток
+    const outgoing: Record<string, string[]> = {};
+    for (const relName of Object.keys(RELATIONS)) {
+      const t = linkTargets(note.fm[relName]).map((x) => idx.resolve(x)?.name ?? x);
+      if (t.length) outgoing[relName] = t;
+    }
+    const incoming: Record<string, string[]> = {};
+    for (const other of idx.notes) {
+      for (const [relName, r] of Object.entries(RELATIONS)) {
+        if (linkTargets(other.fm[relName]).some((x) => idx.resolve(x)?.name === note.name)) {
+          (incoming[r.inverse] ??= []).push(other.name);
+        }
+      }
+    }
     return {
       id: String(note.fm.id), title: note.name, type: String(note.fm.type), status: String(note.fm.status),
       path: note.rel, frontmatter: note.fm, body: note.body.trim(),
       links_out: links.filter((l) => idx.resolve(l)).map((l) => idx.resolve(l)!.name),
       backlinks: idx.backlinks(note.name).map((n) => n.name),
+      relations: { outgoing, incoming },
     };
   }
 
@@ -223,6 +238,21 @@ export class KnowledgeBase {
     const unresolved = extractLinks(body, fm).filter((l) => l.toLowerCase() !== title.toLowerCase() && !idx.resolve(l));
     if (unresolved.length) throw new KbError(`Нерозв'язні посилання: ${unresolved.map((l) => `[[${l}]]`).join(', ')}. Створіть ці нотатки або виправте назви (див. search_notes).`);
 
+    // 5a. Онтологія: ціль кожного типізованого відношення має клас із range
+    for (const [relName, r] of Object.entries(RELATIONS)) {
+      if (!(relName in fm)) continue;
+      const targets = linkTargets(fm[relName]);
+      if (r.min && targets.length < r.min) throw new KbError(`Відношення ${relName} потребує щонайменше ${r.min} цілі (${r.range.join(' | ')})`);
+      if (r.max && targets.length > r.max) throw new KbError(`Відношення ${relName} допускає не більше ${r.max} цілі`);
+      for (const t of targets) {
+        if (t.toLowerCase() === title.toLowerCase()) throw new KbError(`Відношення ${relName} не може вказувати на саму нотатку`);
+        const target = idx.resolve(t)!;
+        if (!r.range.includes(target.fm.type as NoteType)) {
+          throw new KbError(`Порушення онтології: ${input.type}.${relName} → [[${target.name}]] має тип ${target.fm.type}, а допустимі: ${r.range.join(', ')}`);
+        }
+      }
+    }
+
     const rel = existing?.rel ?? path.join(rule.folder, `${title}.md`);
     const abs = path.join(cfg.vaultPath, rel);
     if (!abs.startsWith(cfg.vaultPath + path.sep)) throw new KbError('Шлях нотатки виходить за межі vault');
@@ -260,6 +290,11 @@ export class KnowledgeBase {
     }
     return result;
   }
+}
+
+function linkTargets(v: unknown): string[] {
+  const list = v == null ? [] : Array.isArray(v) ? v : [v];
+  return list.map((x) => String(x).match(/^\[\[([^\]|#]+)/)?.[1]?.trim() ?? String(x));
 }
 
 function toLink(v: string): string {

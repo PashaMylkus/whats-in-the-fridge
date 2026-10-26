@@ -24,11 +24,11 @@ export const RULES: Record<NoteType, TypeRule> = {
   },
   component: {
     folder: 'Components', statuses: ['planned', 'in-progress', 'implemented', 'deprecated'], defaultStatus: 'planned',
-    fields: { layer: 'api', path: '', implements: [], depends_on: [] }, mocSection: '## Компоненти застосунку',
+    fields: { layer: 'api', path: '', requirements: [], implements: [], depends_on: [] }, mocSection: '## Компоненти застосунку',
   },
   decision: {
     folder: 'Decisions', statuses: ['proposed', 'accepted', 'superseded', 'deprecated'], defaultStatus: 'accepted',
-    fields: { adr: null, date: null, deciders: [], supersedes: null }, mocSection: '## Архітектурні рішення',
+    fields: { adr: null, date: null, deciders: [], supersedes: null, applies_to: [] }, mocSection: '## Архітектурні рішення',
   },
   glossary: {
     folder: 'Glossary', statuses: ['active', 'deprecated'], defaultStatus: 'active',
@@ -45,8 +45,20 @@ export const ENUMS: Record<string, string[]> = {
   kind: ['feature', 'fix', 'docs', 'refactor', 'test', 'chore'],
 };
 
+/**
+ * Онтологія: типізовані відношення між нотатками (domain → range).
+ * Дзеркалить нотатку «Онтологія застосунку» у vault.
+ */
+export const RELATIONS: Record<string, { domain: NoteType[]; range: NoteType[]; inverse: string; min?: number; max?: number }> = {
+  depends_on: { domain: ['component'], range: ['component'], inverse: 'used_by' },
+  implements: { domain: ['component'], range: ['concept'], inverse: 'implemented_by' },
+  applies_to: { domain: ['decision'], range: ['component', 'concept'], inverse: 'governed_by', min: 1 },
+  supersedes: { domain: ['decision'], range: ['decision'], inverse: 'superseded_by', max: 1 },
+  affects: { domain: ['change'], range: ['component', 'concept', 'decision'], inverse: 'changed_by' },
+};
+
 /** Поля, значення яких — wiki-посилання ("[[Назва]]"). */
-export const LINK_FIELDS = ['depends_on', 'affects', 'supersedes'];
+export const LINK_FIELDS = Object.keys(RELATIONS);
 
 export const ROOT_MOC = 'MOC-Застосунок';
 

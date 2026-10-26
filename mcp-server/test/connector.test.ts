@@ -127,12 +127,30 @@ describe('fridge-kb MCP server', () => {
   });
 
   it('decision отримує наступний номер ADR і залишається ідемпотентним без префікса', async () => {
-    const adr = { type: 'decision', title: 'TypeScript і stdio для MCP-сервера', content: '## Контекст\n\nПотрібен конектор.\n\n## Рішення\n\nTypeScript + stdio.' };
+    const adr = { type: 'decision', title: 'TypeScript і stdio для MCP-сервера', content: '## Контекст\n\nПотрібен конектор.\n\n## Рішення\n\nTypeScript + stdio.', fields: { applies_to: ['MCP-сервер бази знань'] } };
     const r1 = await call('ingest_note', adr);
     expect(r1.structuredContent).toMatchObject({ status: 'created', id: 'adr-0002', title: 'ADR-0002 TypeScript і stdio для MCP-сервера' });
     const r2 = await call('ingest_note', adr);
     expect(r2.structuredContent.status).toBe('unchanged');
     expect(readdirSync(path.join(vault, 'Decisions'))).toHaveLength(2);
+  });
+
+  it('онтологія: відхиляє відношення з ціллю поза range і рішення без applies_to', async () => {
+    const r1 = await call('ingest_note', {
+      type: 'component', title: 'MCP-сервер бази знань', content: 'Конектор до vault.',
+      fields: { implements: ['ADR-0001 Монорепозиторій на npm workspaces'] },
+    });
+    expect(r1.isError).toBe(true);
+    expect(r1.content[0].text).toContain('Порушення онтології');
+    const r2 = await call('ingest_note', { type: 'decision', title: 'Рішення без цілі', content: 'Контекст і рішення без applies_to.' });
+    expect(r2.isError).toBe(true);
+    expect(r2.content[0].text).toContain('applies_to');
+  });
+
+  it('get_note повертає типізовані відношення й обернені до них', async () => {
+    const g = await call('get_note', { title: 'MCP-сервер бази знань' });
+    expect(g.structuredContent.relations.incoming.governed_by).toContain('ADR-0002 TypeScript і stdio для MCP-сервера');
+    expect(g.structuredContent.relations.incoming.changed_by).toContain('Каркас MCP-сервера fridge-kb');
   });
 
   it('відхиляє нерозв\'язні посилання й нічого не записує', async () => {
