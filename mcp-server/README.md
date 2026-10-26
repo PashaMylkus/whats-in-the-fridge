@@ -55,3 +55,42 @@ npm test
 MCP-клієнт по stdio на тимчасовому vault із bare-репозиторієм як origin: створення,
 ідемпотентний повтор, оновлення, нумерація ADR, відхилення битих посилань і шляхів,
 git pull перед записом, пошук і backlinks.
+
+## Другий конектор: GitHub MCP (джерело даних)
+
+У `.mcp.json` зареєстровано офіційний віддалений GitHub MCP-сервер у режимі лише
+читання з двома наборами інструментів:
+
+```json
+"github": {
+  "type": "http",
+  "url": "https://api.githubcopilot.com/mcp/",
+  "headers": {
+    "Authorization": "Bearer ${GITHUB_PAT}",
+    "X-MCP-Toolsets": "repos,pull_requests",
+    "X-MCP-Readonly": "true"
+  }
+}
+```
+
+Токен — **fine-grained PAT** (GitHub → Settings → Developer settings → Fine-grained tokens):
+
+| Параметр | Значення |
+|---|---|
+| Repository access | Only select repositories → `whats-in-the-fridge` |
+| Contents | Read-only |
+| Pull requests | Read-only |
+| Metadata | Read-only (обов'язково) |
+| Expiration | 30 днів |
+
+Токен не зберігається в репозиторії: `.mcp.json` посилається на змінну середовища
+`GITHUB_PAT` (`export GITHUB_PAT=...` або `$env:GITHUB_PAT="..."` у PowerShell).
+
+Перевірка: запустити `claude` у корені репозиторію, схвалити сервери `fridge-kb` і
+`github`, виконати `/mcp` (обидва — connected) і дати агенту задачу:
+
+> Через сервер github отримай останні коміти репозиторію PashaMylkus/whats-in-the-fridge
+> (list_commits). Для 2–3 комітів, яких ще немає в базі знань (перевір search_notes за хешем),
+> отримай деталі (get_commit) і зафіксуй їх через ingest_note як нотатки type "change"
+> (fields: kind за префіксом Conventional Commits, commit, affects — релевантні компоненти;
+> назва — українською). Підсумуй таблицею: коміт → status, id, commit у vault.
