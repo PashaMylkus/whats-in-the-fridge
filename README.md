@@ -7,14 +7,14 @@
 - Завдання та ключові рішення: [ЗАВДАННЯ.md](ЗАВДАННЯ.md)
 - Вимоги до застосунку: [docs/app-requirements.md](docs/app-requirements.md)
 - Вимоги до agent harness: [docs/harness-requirements.md](docs/harness-requirements.md)
-- База знань: окремий репозиторій `whats-in-the-fridge-vault`
+- База знань: окремий репозиторій [whats-in-the-fridge-vault](https://github.com/PashaMylkus/whats-in-the-fridge-vault)
 
 ## Стан
 
 | ПР | Тема | Статус |
 |---|---|---|
 | 1 | Аналіз задачі та формування вимог до застосунку й agent harness | ✅ |
-| 2 | База знань (Obsidian vault) і джерела даних | ⏳ |
+| 2 | База знань (Obsidian vault) і джерела даних | ✅ |
 | 3 | MCP-конектор до бази знань | ⏳ |
 | 4 | Guardrails і hooks | ⏳ |
 | 5 | Skills | ⏳ |
