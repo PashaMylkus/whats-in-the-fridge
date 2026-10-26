@@ -40,7 +40,7 @@ server.registerTool(
   {
     title: 'Пошук нотаток',
     description:
-      'Повнотекстовий пошук у базі знань застосунку «Що в холодильнику» за назвою, псевдонімами (aliases), тегами й текстом нотаток. ' +
+      'Повнотекстовий пошук у базі знань застосунку «Що в холодильнику» за назвою, псевдонімами (aliases), тегами, id і полями frontmatter (наприклад хеш коміту) та текстом нотаток. ' +
       'Використовуйте перед зміною коду, щоб знайти поняття, компоненти та архітектурні рішення, і перед ingest_note — щоб не створити дублікат.',
     inputSchema: {
       query: z.string().min(2).describe('Слова для пошуку, наприклад "термін придатності" або "auth"'),
@@ -81,7 +81,7 @@ server.registerTool(
       'Усі [[посилання]] у content і links мають вказувати на наявні нотатки.',
     inputSchema: {
       type: z.enum(NOTE_TYPES).describe('concept | component | decision | glossary | change'),
-      title: z.string().min(2).max(120).describe('Назва нотатки українською, в однині; для decision префікс ADR-NNNN додається автоматично'),
+      title: z.string().min(2).max(120).describe('Коротка змістовна назва українською (для change — що зроблено, а не текст повідомлення коміту); без символів \\ / : * ? " < > | # ^ [ ]; для decision префікс ADR-NNNN додається автоматично'),
       content: z.string().min(10).describe('Текст нотатки у Markdown без frontmatter і без заголовка першого рівня'),
       id: z.string().optional().describe('Стабільний id <type>-<slug>; якщо не задано — генерується з назви'),
       aliases: z.array(z.string()).optional(),

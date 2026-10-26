@@ -168,6 +168,8 @@ describe('fridge-kb MCP server', () => {
   it('search_notes і get_note читають vault', async () => {
     const s = await call('search_notes', { query: 'mcp сервер' });
     expect(s.structuredContent.results[0].title).toBe('MCP-сервер бази знань');
+    const byCommit = await call('search_notes', { query: 'abcdef1', type: 'change' });
+    expect(byCommit.structuredContent.results.map((r: any) => r.id)).toEqual(['change-abcdef1']);
     const g = await call('get_note', { id: 'concept-product' });
     expect(g.structuredContent.title).toBe('Продукт');
     expect(g.structuredContent.backlinks).toEqual(expect.arrayContaining(['MOC-Застосунок', 'ADR-0001 Монорепозиторій на npm workspaces']));

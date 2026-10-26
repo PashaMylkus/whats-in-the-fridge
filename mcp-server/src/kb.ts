@@ -79,6 +79,13 @@ export class KnowledgeBase {
         const title = n.name.toLowerCase();
         const aliases = ((n.fm.aliases as string[]) ?? []).join(' ').toLowerCase();
         const tags = ((n.fm.tags as string[]) ?? []).join(' ').toLowerCase();
+        // id і решта полів frontmatter (commit, path, term_en, requirements…) — щоб знаходити нотатку за хешем коміту чи шляхом у коді
+        const meta = Object.entries(n.fm)
+          .filter(([k]) => !['title', 'aliases', 'tags'].includes(k))
+          .flatMap(([, v]) => (Array.isArray(v) ? v : [v]))
+          .filter((v) => typeof v === 'string' || typeof v === 'number')
+          .join(' ')
+          .toLowerCase();
         const body = n.body.toLowerCase();
         let score = 0;
         const phrase = terms.join(' ');
@@ -90,6 +97,7 @@ export class KnowledgeBase {
           else if (title.includes(t)) score += 5;
           if (aliases.includes(t)) score += 4;
           if (tags.includes(t)) score += 2;
+          if (meta.includes(t)) score += 3;
           score += Math.min(body.split(t).length - 1, 5);
         }
         const pos = body.indexOf(terms[0]);
