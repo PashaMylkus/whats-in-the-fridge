@@ -2,7 +2,7 @@
 name: generate-tests
 description: Генерує unit-тести Vitest для модуля застосунку «Що в холодильнику» за правилами з бази знань (нотатки концепцій і компонентів) і конвенціями проєкту. Використовуй, коли треба покрити тестами новий або змінений модуль, особливо доменну логіку packages/shared.
 argument-hint: <шлях до модуля, напр. packages/shared/src/domain/freshness.ts>
-allowed-tools: Read Grep Glob mcp__fridge-kb__search_notes mcp__fridge-kb__get_note Edit(./packages/*/test/**) Bash(npx vitest run *) Bash(npm run test *) Bash(npm test *)
+allowed-tools: Read Grep Glob mcp__fridge-kb__search_notes mcp__fridge-kb__get_note Edit(/packages/*/test/**) Bash(npx vitest run *) Bash(npm run test *) Bash(npm test *)
 ---
 
 # Skill: generate-tests (цільова задача T-02)
@@ -27,7 +27,8 @@ allowed-tools: Read Grep Glob mcp__fridge-kb__search_notes mcp__fridge-kb__get_n
    - без `.only`, `.skip`, `@ts-ignore`, `@ts-nocheck` (B-09); без читання `.env` (B-01);
    - без `Date.now()` і моків часу — дати передаються явно.
 5. **Напиши тести** за шаблоном і конвенціями з [test-conventions.md](test-conventions.md).
-6. **Запусти** `npx vitest run test/<модуль>.test.ts` у теці пакета, потім з `--coverage`.
+6. **Запусти з кореня репозиторію, без `cd`** (робоча тека Bash зберігається між викликами, і правила дозволів за шляхами перестають збігатися):
+   `npx vitest run --root packages/<пакет> test/<модуль>.test.ts`, потім те саме з `--coverage`.
    - Тест упав через помилку в самому тесті → виправ тест і запусти знову (до 3 спроб).
    - Тест упав, бо код суперечить нотатці → не виправляй ні код, ні очікування; познач як розбіжність.
 7. **Не комітиш**: коміт робить людина після рев'ю (W-04, B-04).
