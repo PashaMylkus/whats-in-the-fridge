@@ -1,5 +1,5 @@
 // Тест-кейси guardrails (docs/guardrails.md, розділ «Тест-кейси»).
-// Запуск: node --test .claude/hooks/
+// Запуск: node --test '.claude/hooks/*.test.mjs'
 // Hook викликається так само, як його викликає Claude Code: окремий процес, JSON на stdin.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

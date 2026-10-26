@@ -84,7 +84,7 @@ related: [harness-requirements.md]
 
 ## Тест-кейси
 
-Автоматичні: `node --test .claude/hooks/` — hook запускається окремим процесом із JSON на stdin,
+Автоматичні: `node --test '.claude/hooks/*.test.mjs'` — hook запускається окремим процесом із JSON на stdin,
 як його викликає Claude Code; git pre-commit перевіряється на тимчасовому репозиторії.
 
 | ID | Правило | Сценарій дії агента | Очікувана реакція |
