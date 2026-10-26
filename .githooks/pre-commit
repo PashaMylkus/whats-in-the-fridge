@@ -1,0 +1,4 @@
+#!/bin/sh
+# Незалежний від IDE рубіж guardrails (git pre-commit).
+# Увімкнення: git config core.hooksPath .githooks
+exec node "$(git rev-parse --show-toplevel)/.githooks/pre-commit.mjs"

@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git branch)",
+      "Bash(git rev-parse *)",
+      "Bash(git switch -c feature/*)",
+      "Bash(git checkout -b feature/*)",
+      "Bash(npm test *)",
+      "Bash(npm run test *)",
+      "Bash(npm run lint *)",
+      "Bash(npm run typecheck *)",
+      "Bash(npm run build *)",
+      "Bash(npx vitest run *)",
+      "Bash(npx tsc --noEmit *)",
+      "Bash(node tools/*)",
+      "Edit(/apps/**/*.test.ts)",
+      "Edit(/apps/**/*.test.tsx)",
+      "Edit(/packages/**/*.test.ts)",
+      "Edit(/mcp-server/test/**)",
+      "mcp__fridge-kb__search_notes",
+      "mcp__fridge-kb__get_note",
+      "mcp__fridge-kb__vault_status",
+      "mcp__github__get_*",
+      "mcp__github__list_*",
+      "mcp__github__search_*"
+    ],
+    "ask": [
+      "Edit(/packages/shared/src/domain/**)",
+      "Edit(**/prisma/schema.prisma)",
+      "Edit(**/prisma/migrations/**)",
+      "Edit(**/package.json)",
+      "Edit(/docs/app-requirements.md)",
+      "Edit(/docs/harness-requirements.md)",
+      "Edit(/docs/guardrails.md)",
+      "Edit(/CLAUDE.md)",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
+      "Bash(npx prisma migrate dev *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git merge *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "WebFetch",
+      "mcp__fridge-kb__ingest_note"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Edit(.env)",
+      "Edit(.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(//**/whats-in-the-fridge-vault/**)",
+      "Edit(//**/whats-in-the-fridge-vault/**)",
+      "Edit(/.claude/settings.json)",
+      "Edit(/.claude/settings.local.json)",
+      "Edit(/.claude/hooks/**)",
+      "Edit(/.mcp.json)",
+      "Edit(/.githooks/**)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(git rebase *)",
+      "Bash(git filter-branch *)",
+      "Bash(git config core.hooksPath *)",
+      "Bash(npx prisma migrate reset *)",
+      "Bash(npm publish *)",
+      "Bash(gh release *)",
+      "Bash(gh repo delete *)",
+      "Bash(gh repo edit *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "^(Bash|Read|Edit|Write|MultiEdit|NotebookEdit|Grep|Glob|WebFetch|mcp__fridge-kb__.*)$",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guardrails.mjs\" pre", "timeout": 10 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guardrails.mjs\" post", "timeout": 10 }
+        ]
+      }
+    ]
+  }
+}
