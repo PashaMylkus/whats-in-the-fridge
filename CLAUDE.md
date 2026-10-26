@@ -12,11 +12,16 @@
   (`relations.incoming.governed_by`).
 - Після завершеної задачі зафіксуй її через `ingest_note` (type `change`, `fields.commit`).
 
+## Skills
+
+- `/generate-tests <шлях до модуля>` — тести Vitest за правилами з нотаток vault (`.claude/skills/generate-tests/`).
+- `/record-adr <рішення>` — ADR-нотатка в `Decisions/` через `ingest_note` (`.claude/skills/record-adr/`).
+
 ## Правила роботи
 
 - Працюй у гілці `feature/<коротка-назва>`; у `main` не комітиш і не пушиш.
 - Повідомлення комітів — Conventional Commits (`feat(scope): …`).
-- Не читай `.env` і ключі, не змінюй `.claude/`, `.mcp.json`, `.githooks/`.
+- Не читай `.env` і ключі, не змінюй `.claude/settings*.json`, `.claude/hooks/`, `.mcp.json`, `.githooks/`.
 - Не послаблюй перевірки: без `.only` / `.skip`, `@ts-ignore`, `eslint-disable` для файлу.
 
 Ці правила технічно примушуються hooks (`.claude/hooks/guardrails.mjs`), правилами
