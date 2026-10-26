@@ -1,0 +1,11 @@
+{
+  "name": "whats-in-the-fridge",
+  "private": true,
+  "description": "Що в холодильнику — облік продуктів, терміни придатності, підбір рецептів",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": { "node": ">=20" }
+}
