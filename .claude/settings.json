@@ -27,7 +27,8 @@
       "mcp__fridge-kb__vault_status",
       "mcp__github__get_*",
       "mcp__github__list_*",
-      "mcp__github__search_*"
+      "mcp__github__search_*",
+      "mcp__fridge-kb__ingest_note"
     ],
     "ask": [
       "Edit(/packages/shared/src/domain/**)",
@@ -46,8 +47,7 @@
       "Bash(git merge *)",
       "Bash(curl *)",
       "Bash(wget *)",
-      "WebFetch",
-      "mcp__fridge-kb__ingest_note"
+      "WebFetch"
     ],
     "deny": [
       "Read(.env)",
@@ -82,7 +82,11 @@
       {
         "matcher": "^(Bash|Read|Edit|Write|MultiEdit|NotebookEdit|Grep|Glob|WebFetch|mcp__fridge-kb__.*)$",
         "hooks": [
-          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guardrails.mjs\" pre", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guardrails.mjs\" pre",
+            "timeout": 10
+          }
         ]
       }
     ],
@@ -90,7 +94,11 @@
       {
         "matcher": "Bash|Edit|Write|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guardrails.mjs\" post", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guardrails.mjs\" post",
+            "timeout": 10
+          }
         ]
       }
     ]
