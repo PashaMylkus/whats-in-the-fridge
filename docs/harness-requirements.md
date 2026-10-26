@@ -34,8 +34,10 @@ Harness **не** є частиною бізнес-логіки застосун�
 MCP-сервер `fridge-kb` (TypeScript, `@modelcontextprotocol/sdk`, транспорт stdio)
 працює з локальними клонами обох репозиторіїв і надає типізовані інструменти:
 
-- **retrieval:** `kb_search(query)`, `kb_get_note(id)`, `kb_list(type)`, `kb_related(id)`;
-- **ingestion:** `kb_upsert_note(note)`, `kb_ingest_adr(path)`, `kb_ingest_commits(range)`.
+- **retrieval:** `search_notes(query, type?)`, `get_note(id | title)` (з вихідними й зворотними посиланнями), `vault_status()`;
+- **ingestion:** `ingest_note(type, title, content, …)` — створення / оновлення нотатки будь-якого типу, у т.ч. `change` для завершених задач і комітів.
+
+Джерелом даних про коміти й pull request-и для ingestion є офіційний GitHub MCP-сервер (read-only, toolsets `repos`, `pull_requests`). Реалізація — ПР № 3, `mcp-server/` і `.mcp.json`.
 
 Кожен ingestion-виклик створює коміт у репозиторії vault, тому зміни бази знань
 також мають історію й можуть бути відкочені.
@@ -49,11 +51,11 @@ MCP-сервер `fridge-kb` (TypeScript, `@modelcontextprotocol/sdk`, тран�
 |---|---|---|---|---|---|
 | DS-01 | Документ вимог до застосунку | Markdown (`docs/app-requirements.md`) | ПР 1 | Читання файлу; нормалізується у vault як нотатки `requirement/FR-xx` | Що саме треба реалізувати і критерії приймання |
 | DS-02 | Harness Requirements, `ЗАВДАННЯ.md` | Markdown | ПР 1 | Читання файлу; у vault — нотатка `harness/overview` | Мета harness, цільові задачі, guardrails |
-| DS-03 | Архітектурні рішення (ADR) | Markdown (`docs/adr/NNNN-*.md`) | ПР 2+ | `kb_ingest_adr` → vault; читання через `kb_get_note` | Чому прийнято рішення, обмеження архітектури |
-| DS-04 | Глосарій домену | Нотатки vault (`glossary/*`) | ПР 2+ | `kb_search`, `kb_get_note` | Однозначні терміни: продукт, місце зберігання, статус терміну, рецепт, інгредієнт |
+| DS-03 | Архітектурні рішення (ADR) | Markdown (`docs/adr/NNNN-*.md`) | ПР 2+ | `ingest_note` (type decision) → vault; читання через `get_note` | Чому прийнято рішення, обмеження архітектури |
+| DS-04 | Глосарій домену | Нотатки vault (`glossary/*`) | ПР 2+ | `search_notes`, `get_note` | Однозначні терміни: продукт, місце зберігання, статус терміну, рецепт, інгредієнт |
 | DS-05 | Вихідний код | TypeScript, структура workspaces | ПР 2+ | Прямий доступ (Read, Grep, Glob); карта модулів у vault (`module/*`) | Поточний стан, стиль коду, імпорти між шарами |
 | DS-06 | Схема БД і міграції | `prisma/schema.prisma`, `prisma/migrations/` | ПР 2+ | Прямий доступ; нотатка `data-model` у vault | Сутності та зв'язки, допустимі зміни схеми |
-| DS-07 | Історія git | Коміти (Conventional Commits), гілки, PR | ПР 1+ | `git log / diff` (allow); `kb_ingest_commits` → журнал змін у vault | Що й чому змінювалося, контекст для рев'ю |
+| DS-07 | Історія git | Коміти (Conventional Commits), гілки, PR | ПР 1+ | `git log / diff` (allow); GitHub MCP `list_commits` → `ingest_note` (type change) → журнал змін у vault | Що й чому змінювалося, контекст для рев'ю |
 | DS-08 | Результати перевірок | Вивід `vitest`, `tsc`, `eslint`, `npm run build` | ПР 2+ | Запуск команд через Bash (allow) | Вхідні дані для log triage, критерій «задача виконана» |
 | DS-09 | Стандарти й конвенції | `CLAUDE.md`, `CONTRIBUTING.md`, конфіги ESLint/Prettier/tsconfig | ПР 2+ | Автоматично (CLAUDE.md) і читання файлів | Правила іменування, структура модулів, формат комітів |
 | DS-10 | Контракт API | OpenAPI 3.1 (`docs/api/openapi.yaml`) | ПР 3+ | Прямий доступ; нотатки `api/*` у vault | Ендпоінти, схеми запитів і відповідей |
@@ -76,7 +78,7 @@ MCP-сервер `fridge-kb` (TypeScript, `@modelcontextprotocol/sdk`, тран�
 | T-01 | **Генерація каркасу модуля** | За назвою сутності агент створює вертикальний зріз: zod-схему в `packages/shared`, модель Prisma і міграцію, repository → service → router в `apps/api`, хук TanStack Query і сторінку в `apps/web`. | 7+ однотипних модулів (продукти, рецепти, список покупок, журнал…) — найбільша економія часу; гарантує однакову архітектуру. | `tsc`, `eslint` і згенеровані тести проходять; файли лише у дозволених директоріях; імпорти не порушують шари. | skill `scaffold-module` (ПР 5) |
 | T-02 | **Генерація unit- та інтеграційних тестів** | Для нової функції чи ендпоінта агент пише тести Vitest / Supertest, включно з граничними випадками (дати термінів, порожні списки, чужі ресурси). | Доменна логіка (статуси термінів, ранжування рецептів) має чіткі очікувані результати — ідеальна для автоматизації; підтримує NFR-04. | Тести проходять на правильному коді й падають на навмисно зламаному (мутаційна перевірка); покриття не знижується. | skill `generate-tests` (ПР 5) |
 | T-03 | **Рев'ю коду за конвенціями проєкту** | Перед комітом агент перевіряє diff за чек-листом: шари архітектури, валідація zod, обробка помилок, відсутність секретів, іменування, формат коміту. | Студент працює сам — агент-рев'юер заміняє другу людину; знаходить порушення конвенцій до коміту. | Знаходить ≥ 80 % навмисно внесених порушень на контрольному наборі diff-ів; ≤ 1 хибного зауваження на рев'ю. | skill `review-code` (ПР 5), subagent `reviewer` (ПР 6) |
-| T-04 | **Синхронізація документації і бази знань** | Після зміни коду агент оновлює OpenAPI, README і через `kb_upsert_note` — нотатки модулів у vault; після нового ADR — `kb_ingest_adr`. | Тримає knowledge layer актуальним, без чого retrieval і RAG (ПР 7) повертають застарілі знання. | Розбіжностей між OpenAPI і реальними маршрутами — 0 (перевіряється скриптом); кожна змінена директорія має оновлену нотатку. | skill `sync-docs` (ПР 5) + MCP ingestion (ПР 3) |
+| T-04 | **Синхронізація документації і бази знань** | Після зміни коду агент оновлює OpenAPI, README і через `ingest_note` — нотатки модулів у vault; після нового ADR — `ingest_note`. | Тримає knowledge layer актуальним, без чого retrieval і RAG (ПР 7) повертають застарілі знання. | Розбіжностей між OpenAPI і реальними маршрутами — 0 (перевіряється скриптом); кожна змінена директорія має оновлену нотатку. | skill `sync-docs` (ПР 5) + MCP ingestion (ПР 3) |
 | T-05 | **Аналіз збоїв тестів і збірки (log triage)** | Агент запускає `npm test` / `tsc` / `build`, групує помилки, визначає першопричину і пропонує мінімальне виправлення. | Скорочує цикл «червоний тест → виправлення»; типові помилки TypeScript агент розв'язує швидше за людину. | ≥ 70 % збоїв з контрольного набору виправлено з першої спроби без змін у тестах. | skill `triage-failures` (ПР 5) |
 
 Задачі обрано так, щоб усі мали **об'єктивні, автоматично перевірювані критерії**
@@ -98,7 +100,7 @@ MCP-сервер `fridge-kb` (TypeScript, `@modelcontextprotocol/sdk`, тран�
 | Читання й пошук у репозиторії застосунку | Read, Grep, Glob файлів поза `.env*` |
 | Read-only команди git | `git status`, `git diff`, `git log`, `git show`, `git branch` |
 | Локальні перевірки | `npm test`, `npm run lint`, `npm run typecheck`, `npm run build` |
-| Retrieval із бази знань | `kb_search`, `kb_get_note`, `kb_list`, `kb_related` |
+| Retrieval із бази знань | `search_notes`, `get_note`, `vault_status`; GitHub MCP (read-only) |
 | Створення робочих гілок | `git switch -c feature/*` |
 
 ### 5.2. Warn / Require approval — потрібне підтвердження людини
@@ -111,7 +113,7 @@ MCP-сервер `fridge-kb` (TypeScript, `@modelcontextprotocol/sdk`, тран�
 | Зміна залежностей | `npm install <pkg>`, `npm uninstall`, зміна `package.json` |
 | Зміна схеми БД | `prisma migrate dev --name …`, редагування `schema.prisma` |
 | Коміт у робочу гілку | `git commit` (з перевіркою Conventional Commits) |
-| Запис у базу знань | `kb_upsert_note`, `kb_ingest_adr`, `kb_ingest_commits` |
+| Запис у базу знань | `ingest_note` |
 | Пуш у робочу гілку | `git push origin feature/*` |
 | Мережеві запити | `WebFetch`, `curl` до документації |
 
