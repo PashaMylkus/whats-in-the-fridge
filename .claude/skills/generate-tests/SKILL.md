@@ -2,7 +2,7 @@
 name: generate-tests
 description: Генерує unit-тести Vitest для модуля застосунку «Що в холодильнику» за правилами з бази знань (нотатки концепцій і компонентів) і конвенціями проєкту. Використовуй, коли треба покрити тестами новий або змінений модуль, особливо доменну логіку packages/shared.
 argument-hint: <шлях до модуля, напр. packages/shared/src/domain/freshness.ts>
-allowed-tools: Read Grep Glob mcp__fridge-kb__search_notes mcp__fridge-kb__get_note Edit(packages/*/test/**) Bash(npx vitest run *) Bash(npm run test *) Bash(npm test *)
+allowed-tools: Read Grep Glob mcp__fridge-kb__search_notes mcp__fridge-kb__get_note Edit(./packages/*/test/**) Bash(npx vitest run *) Bash(npm run test *) Bash(npm test *)
 ---
 
 # Skill: generate-tests (цільова задача T-02)
