@@ -58,7 +58,8 @@ export class KnowledgeBase {
   // ------------------------------------------------------------------ retrieval
   async getNote(ref: { id?: string; title?: string }) {
     const idx = await this.index();
-    const note = (ref.id && idx.byId.get(ref.id)) || (ref.title && idx.resolve(ref.title)) || undefined;
+    // id або назва: агенти часто передають назву нотатки в поле id
+    const note = (ref.id && (idx.byId.get(ref.id) ?? idx.resolve(ref.id))) || (ref.title && (idx.resolve(ref.title) ?? idx.byId.get(ref.title))) || undefined;
     if (!note) throw new KbError(`Нотатку не знайдено: ${ref.id ?? ref.title}`);
     const links = extractLinks(note.body, note.fm);
     // типізовані відношення: вихідні з frontmatter і обернені, обчислені з інших нотаток

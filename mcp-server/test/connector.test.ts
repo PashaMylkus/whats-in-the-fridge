@@ -191,6 +191,8 @@ describe('fridge-kb MCP server', () => {
     const g = await call('get_note', { id: 'concept-product' });
     expect(g.structuredContent.title).toBe('Продукт');
     expect(g.structuredContent.backlinks).toEqual(expect.arrayContaining(['MOC-Застосунок', 'ADR-0001 Монорепозиторій на npm workspaces']));
+    const byTitleInId = await call('get_note', { id: 'Продукт' });
+    expect(byTitleInId.structuredContent.id).toBe('concept-product');
     const missing = await call('get_note', { title: 'Немає такої' });
     expect(missing.isError).toBe(true);
   });
